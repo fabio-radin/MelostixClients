@@ -1,0 +1,26 @@
+# Windows client (.NET / WPF)
+windows-client/**/bin/
+windows-client/**/obj/
+*.user
+
+# Linux client (C++ build output)
+linux-client/**/*.o
+linux-client/melostix-client
+
+# Python client
+python-client/__pycache__/
+python-client/*.pyc
+
+# Android clients (android-glasses-client, android-tablet-client) - standard Gradle/Android
+# Studio output, regenerated locally by each dev, never checked in
+**/.gradle/
+**/.idea/
+**/build/
+**/local.properties
+*.apk
+*.aab
+
+# Editors/OS
+.vs/
+.vscode/
+.DS_Store

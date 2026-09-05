@@ -1,0 +1,49 @@
+<Window x:Class="MelostixClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MelostixClient"
+        mc:Ignorable="d"
+        Title="Melostix - Windows Client" Height="500" Width="900"
+        Icon="app.ico"
+        Background="Black"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="800">
+            <!-- Finestra a 3 righe (precedente/corrente/successiva) - solo quando status == "synced". -->
+            <TextBlock Text="{Binding Previous}"
+                       Foreground="#9E9E9E" FontSize="22"
+                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                       Margin="0,0,0,12"
+                       Visibility="{Binding ShowSyncedLines, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{Binding Current}"
+                       Foreground="White" FontSize="32" FontWeight="Bold"
+                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                       Margin="0,0,0,12"
+                       Visibility="{Binding ShowSyncedLines, Converter={StaticResource BoolToVis}}" />
+            <TextBlock Text="{Binding Next}"
+                       Foreground="#9E9E9E" FontSize="22"
+                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                       Visibility="{Binding ShowSyncedLines, Converter={StaticResource BoolToVis}}" />
+
+            <!-- Riga singola per tutti gli altri stati (none/loading/plain/not_found/error/non connesso). -->
+            <TextBlock Text="{Binding HeaderLine}"
+                       Foreground="White" FontSize="26"
+                       HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                       Visibility="{Binding ShowHeaderLine, Converter={StaticResource BoolToVis}}" />
+
+            <TextBlock Text="(lyrics not synced)"
+                       Foreground="#9E9E9E" FontSize="18"
+                       HorizontalAlignment="Center" Margin="0,12,0,0"
+                       Visibility="{Binding ShowNotSyncedNote, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+
+        <TextBlock Text="Esc: quit" Foreground="#666666" FontSize="12"
+                   HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" />
+    </Grid>
+</Window>

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- AssemblyTitle/Product drive the "Description"/"Product name" fields Explorer shows
+         in the .exe's Properties dialog - without these they default to the bare assembly
+         name (MelostixClient), not the display name used everywhere else. -->
+    <AssemblyTitle>Melostix - Windows Client</AssemblyTitle>
+    <Product>Melostix - Windows Client</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ApplicationIcon (sopra) copre solo l'icona del file .exe: la Window.Icon in XAML la
+         risolve a runtime come risorsa impacchettata nell'assembly, va inclusa esplicitamente
+         qui altrimenti "Icon="app.ico"" in MainWindow.xaml lancia IOException all'avvio. -->
+    <Resource Include="app.ico" />
+  </ItemGroup>
+
+</Project>

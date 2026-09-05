@@ -1,0 +1,11 @@
+<resources>
+    <!-- Tema piattaforma "vecchio stile" (disponibile da API 1), niente AppCompat/Material:
+         Compose non e' un'opzione (richiede minSdk 21) e per un client cosi' minimale non serve
+         nemmeno AppCompat. Sfondo nero pieno per semplice leggibilita' del testo su un display
+         LCD normale. -->
+    <style name="AppTheme.Fullscreen" parent="android:Theme.Black.NoTitleBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>

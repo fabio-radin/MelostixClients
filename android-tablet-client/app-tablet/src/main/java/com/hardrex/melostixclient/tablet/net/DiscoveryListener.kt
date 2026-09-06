@@ -10,50 +10,50 @@ import java.net.SocketTimeoutException
 data class DiscoveredHost(
     val address: InetAddress,
     val port: Int,
-    /** Campo opzionale del protocollo 1.1.0 (MelostixProtocol) - un master 1.0.0 non lo manda
-     *  affatto, `optBoolean` lo legge come false in quel caso, indistinguibile da "nessuna
-     *  password richiesta esplicitamente" (comportamento corretto: senza questo campo il master
-     *  non puo' comunque avere l'handshake). Solo informativo: il client si accorge comunque se
-     *  serve una password dalla prima riga ricevuta sul canale dati (vedi MelostixClient), questo
-     *  campo non e' l'unica fonte di verita'. */
+    /** Optional field from protocol 1.1.0 (MelostixProtocol) - a 1.0.0 master doesn't send it
+     *  at all, `optBoolean` reads it as false in that case, indistinguishable from "no password
+     *  explicitly required" (correct behavior: without this field the master can't have the
+     *  handshake anyway). Informational only: the client still notices if a password is needed
+     *  from the first line received on the data channel (see MelostixClient), this field is not
+     *  the only source of truth. */
     val authRequired: Boolean,
 )
 
-/** Ascolta il broadcast UDP del master (MelostixClientDiscoveryBroadcaster lato app-master) e ne
- *  estrae indirizzo IP e porta TCP annunciati - nessuna configurazione manuale necessaria. */
+/** Listens for the master's UDP broadcast (MelostixClientDiscoveryBroadcaster on the app-master
+ *  side) and extracts the announced IP address and TCP port - no manual configuration needed. */
 object DiscoveryListener {
 
     private const val TAG = "DiscoveryListener"
 
-    /** Blocca fino a un annuncio valido o allo scadere di timeoutMs (null in quel caso: il
-     *  chiamante puo' semplicemente riprovare). */
+    /** Blocks until a valid announcement or until timeoutMs expires (null in that case: the
+     *  caller can simply retry). */
     fun listenOnce(timeoutMs: Int): DiscoveredHost? {
         val socket = try {
             DatagramSocket(MelostixClientProtocol.DISCOVERY_PORT)
         } catch (e: Exception) {
-            Log.w(TAG, "impossibile aprire il socket di discovery: ${e.javaClass.simpleName}: ${e.message}")
-            // Fallimenti immediati (es. bind) non consumano tempo come una receive() in timeout:
-            // una piccola pausa evita di martellare in loop stretto il chiamante in caso di
-            // errore persistente (es. porta occupata).
+            Log.w(TAG, "unable to open the discovery socket: ${e.javaClass.simpleName}: ${e.message}")
+            // Immediate failures (e.g. bind) don't take time like a receive() timeout would:
+            // a small pause avoids hammering the caller in a tight loop in case of a
+            // persistent error (e.g. port already in use).
             Thread.sleep(500)
             return null
         }
 
-        // minSdk e' 19 esatto, il primo livello API in cui DatagramSocket implementa davvero
-        // Closeable - .use{} e' quindi sicuro qui, non solo a livello di type-check come lo
-        // sarebbe su un livello API precedente (dove compilerebbe comunque contro uno stub SDK
-        // moderno ma andrebbe in ClassCastException a runtime sul device vero).
+        // minSdk is exactly 19, the first API level where DatagramSocket actually implements
+        // Closeable - .use{} is therefore safe here, not just at the type-check level as it
+        // would be on an earlier API level (which would still compile against a modern SDK
+        // stub but would throw ClassCastException at runtime on a real device).
         return socket.use {
             try {
                 it.soTimeout = timeoutMs
                 val buffer = ByteArray(512)
                 val packet = DatagramPacket(buffer, buffer.size)
                 it.receive(packet)
-                Log.i(TAG, "pacchetto ricevuto da ${packet.address?.hostAddress}, ${packet.length} byte")
+                Log.i(TAG, "packet received from ${packet.address?.hostAddress}, ${packet.length} bytes")
 
                 val json = JSONObject(String(packet.data, 0, packet.length, Charsets.UTF_8))
                 if (json.optString("service") != MelostixClientProtocol.SERVICE_NAME) {
-                    Log.i(TAG, "pacchetto ignorato, service diverso: ${json.optString("service")}")
+                    Log.i(TAG, "packet ignored, different service: ${json.optString("service")}")
                     null
                 } else {
                     DiscoveredHost(
@@ -65,7 +65,7 @@ object DiscoveryListener {
             } catch (e: SocketTimeoutException) {
                 null
             } catch (e: Exception) {
-                Log.w(TAG, "listenOnce fallito: ${e.javaClass.simpleName}: ${e.message}")
+                Log.w(TAG, "listenOnce failed: ${e.javaClass.simpleName}: ${e.message}")
                 null
             }
         }

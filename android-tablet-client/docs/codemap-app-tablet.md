@@ -1,109 +1,109 @@
-# app-tablet — mappa delle classi
+# app-tablet — class map
 
-Client per un tablet Android 4.4.4 generico (display 800x480, landscape, **minSdk 19**). Vedi
-[`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) per porte,
-framing e ciclo di vita della connessione — non ripetuto qui. Il modulo ha solo 4 file, tutti
-documentati in questa pagina. Le dimensioni della UI (`MainActivity`) non sono ancora state
-verificate su device reale.
+Client for a generic Android 4.4.4 tablet (800x480 display, landscape, **minSdk 19**). See
+[`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) for ports,
+framing, and the connection lifecycle — not repeated here. The module has only 4 files, all
+documented on this page. The UI dimensions (`MainActivity`) have not yet been verified on real
+device.
 
 ## `MainActivity` (`class`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/MainActivity.kt`
 
-Unica Activity dell'app. Costruisce a codice (nessun XML layout) l'overlay fullscreen nero con le 3
-righe di testo (precedente/corrente/successiva) e implementa `MelostixClientListener` per ricevere gli
-aggiornamenti da `MelostixClient`. Usa solo `FLAG_FULLSCREEN` standard, non pilota alcun backlight
-proprietario — niente pannello impostazioni oltre alla password del master, perché "un tablet
-normale espone già la propria regolazione luminosità a livello di sistema" — e in
-`onWindowFocusChanged` usa la combinazione "sticky immersive" completa
-(`SYSTEM_UI_FLAG_IMMERSIVE_STICKY` + `LAYOUT_STABLE`/`LAYOUT_HIDE_NAVIGATION`/`LAYOUT_FULLSCREEN`/
-`HIDE_NAVIGATION`/`FULLSCREEN`), disponibile perché minSdk 19 la garantisce da subito.
+The app's only Activity. Builds the black fullscreen overlay with the 3 lines of text
+(previous/current/next) programmatically (no XML layout) and implements `MelostixClientListener`
+to receive updates from `MelostixClient`. Uses only the standard `FLAG_FULLSCREEN`, does not drive
+any proprietary backlight — no settings panel besides the master password, because "a normal tablet
+already exposes its own brightness control at the system level" — and in `onWindowFocusChanged`
+uses the full "sticky immersive" combination (`SYSTEM_UI_FLAG_IMMERSIVE_STICKY` +
+`LAYOUT_STABLE`/`LAYOUT_HIDE_NAVIGATION`/`LAYOUT_FULLSCREEN`/`HIDE_NAVIGATION`/`FULLSCREEN`),
+available because minSdk 19 guarantees it from the start.
 
-| Metodo/Callback | Descrizione | Riferimenti |
+| Method/Callback | Description | References |
 |---|---|---|
-| `fun onCreate(savedInstanceState: Bundle?)` | Imposta i flag finestra (fullscreen + keep-screen-on), costruisce la view tree (solo lyrics view, nessun pannello extra) e mostra "In attesa del master...". | override `Activity.onCreate` |
-| `fun onStart()` | Avvia `melostixClient.start()`. | override `Activity.onStart`; chiama `MelostixClient.start()` |
-| `fun onStop()` | Ferma `melostixClient.stop()`. | override `Activity.onStop`; chiama `MelostixClient.stop()` |
-| `private fun buildLyricsView(): View` | Crea le 3 `TextView` (prev/current/next) in una `LinearLayout` verticale centrata. | chiamato da `onCreate` |
-| `private fun lyricLine(dimmed: Boolean): TextView` | Factory di una riga di testo, dimmata (grigio, 20sp) o piena (bianco, 28sp) — dimensioni non ancora verificate su device reale. | chiamato da `buildLyricsView` |
-| `private fun showStatusMessage(message: String)` | Mostra un solo messaggio centrale, svuota prev/next — usato per tutti gli stati non-"synced". | chiamato da `onCreate`, `onUpdate`, `onConnectionStateChanged` |
-| `override fun onUpdate(update: LyricsUpdate)` (callback `MelostixClientListener`) | Aggiorna la UI in base a `update.status` ("synced" popola le 3 righe, gli altri stati mostrano un messaggio via `showStatusMessage`). | invocato da `MelostixClient.parseAndNotify` tramite `mainHandler.post` |
-| `override fun onConnectionStateChanged(connected: Boolean)` (callback `MelostixClientListener`) | Se `connected == false` mostra "Connessione al master persa, ricerco di nuovo...". | invocato da `MelostixClient.notifyConnectionState` tramite `mainHandler.post` |
-| `fun onWindowFocusChanged(hasFocus: Boolean)` | Quando la finestra ottiene focus, imposta i flag `systemUiVisibility` "sticky immersive" (richiede API 19, sempre disponibile qui). | override `Activity.onWindowFocusChanged` |
+| `fun onCreate(savedInstanceState: Bundle?)` | Sets the window flags (fullscreen + keep-screen-on), builds the view tree (lyrics view only, no extra panel), and shows "Waiting for master...". | overrides `Activity.onCreate` |
+| `fun onStart()` | Starts `melostixClient.start()`. | overrides `Activity.onStart`; calls `MelostixClient.start()` |
+| `fun onStop()` | Stops `melostixClient.stop()`. | overrides `Activity.onStop`; calls `MelostixClient.stop()` |
+| `private fun buildLyricsView(): View` | Creates the 3 `TextView`s (prev/current/next) in a centered vertical `LinearLayout`. | called by `onCreate` |
+| `private fun lyricLine(dimmed: Boolean): TextView` | Factory for a line of text, dimmed (gray, 20sp) or full (white, 28sp) — sizes not yet verified on real device. | called by `buildLyricsView` |
+| `private fun showStatusMessage(message: String)` | Shows a single centered message, clears prev/next — used for every non-"synced" state. | called by `onCreate`, `onUpdate`, `onConnectionStateChanged` |
+| `override fun onUpdate(update: LyricsUpdate)` (`MelostixClientListener` callback) | Updates the UI based on `update.status` ("synced" populates the 3 lines, other states show a message via `showStatusMessage`). | invoked by `MelostixClient.parseAndNotify` via `mainHandler.post` |
+| `override fun onConnectionStateChanged(connected: Boolean)` (`MelostixClientListener` callback) | If `connected == false`, shows "Lost connection to master, searching again...". | invoked by `MelostixClient.notifyConnectionState` via `mainHandler.post` |
+| `fun onWindowFocusChanged(hasFocus: Boolean)` | When the window gains focus, sets the "sticky immersive" `systemUiVisibility` flags (requires API 19, always available here). | overrides `Activity.onWindowFocusChanged` |
 
-**Dipende da**: `MelostixClient`, `MelostixClientListener`, `LyricsUpdate` (net/)
+**Depends on**: `MelostixClient`, `MelostixClientListener`, `LyricsUpdate` (net/)
 
 ## `DiscoveredHost` (`data class`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/DiscoveryListener.kt`
 
-Coppia `(address: InetAddress, port: Int)` che rappresenta il master trovato via broadcast UDP.
+`(address: InetAddress, port: Int)` pair representing the master found via UDP broadcast.
 
-**Usata da**: `DiscoveryListener.listenOnce` (valore di ritorno), `MelostixClient.runLoop`/`readFrom` (consumatori)
+**Used by**: `DiscoveryListener.listenOnce` (return value), `MelostixClient.runLoop`/`readFrom` (consumers)
 
 ## `DiscoveryListener` (`object`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/DiscoveryListener.kt`
 
-Ascolta un singolo pacchetto broadcast UDP del master (`MelostixClientDiscoveryBroadcaster` lato
-app-master, vedi [`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md))
-e ne estrae host/porta TCP annunciati — nessuna configurazione manuale. Usa `.use {}` sul
-`DatagramSocket`: minSdk 19 di questo modulo è il primo livello API in cui `DatagramSocket`
-implementa davvero `Closeable`, quindi il costrutto idiomatico è sicuro anche a runtime (non solo a
-compile-time contro lo stub SDK moderno).
+Listens for a single UDP broadcast packet from the master (`MelostixClientDiscoveryBroadcaster` on
+the app-master side, see
+[`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md)) and
+extracts the announced host/TCP port — no manual configuration. Uses `.use {}` on the
+`DatagramSocket`: this module's minSdk 19 is the first API level where `DatagramSocket` actually
+implements `Closeable`, so the idiomatic construct is safe at runtime too (not just at compile time
+against the modern SDK stub).
 
-| Metodo/Callback | Descrizione | Riferimenti |
+| Method/Callback | Description | References |
 |---|---|---|
-| `fun listenOnce(timeoutMs: Int): DiscoveredHost?` | Apre un `DatagramSocket` sulla porta di discovery dentro un blocco `.use {}`, blocca fino a un pacchetto valido o al timeout, valida il campo `service` del JSON contro `MelostixClientProtocol.SERVICE_NAME`, ritorna `DiscoveredHost` o `null` (timeout, servizio diverso, o errore — il chiamante può ritentare). | chiama `MelostixClientProtocol.DISCOVERY_PORT`/`DATA_PORT`/`SERVICE_NAME`; chiamato da `MelostixClient.runLoop` |
+| `fun listenOnce(timeoutMs: Int): DiscoveredHost?` | Opens a `DatagramSocket` on the discovery port inside a `.use {}` block, blocks until a valid packet arrives or the timeout expires, validates the JSON's `service` field against `MelostixClientProtocol.SERVICE_NAME`, and returns `DiscoveredHost` or `null` (timeout, different service, or error — the caller can retry). | calls `MelostixClientProtocol.DISCOVERY_PORT`/`DATA_PORT`/`SERVICE_NAME`; called by `MelostixClient.runLoop` |
 
-**Dipende da**: `MelostixClientProtocol`
-**Usata da**: `MelostixClient` (`runLoop`)
+**Depends on**: `MelostixClientProtocol`
+**Used by**: `MelostixClient` (`runLoop`)
 
 ## `LyricsUpdate` (`data class`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/MelostixClient.kt`
 
-Snapshot di un messaggio di stato ricevuto dal master: `title`, `artist`, `status` (`"synced"` /
-`"loading"` / `"plain"` / `"not_found"` / `"error"` / altro), più le tre righe `previous`/`current`/`next`
-(valorizzate solo quando `status == "synced"`).
+Snapshot of a status message received from the master: `title`, `artist`, `status` (`"synced"` /
+`"loading"` / `"plain"` / `"not_found"` / `"error"` / other), plus the three lines
+`previous`/`current`/`next` (populated only when `status == "synced"`).
 
-**Usata da**: `MainActivity.onUpdate` (consumatore), `MelostixClient.parseAndNotify` (produttore)
+**Used by**: `MainActivity.onUpdate` (consumer), `MelostixClient.parseAndNotify` (producer)
 
 ## `MelostixClientListener` (`interface`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/MelostixClient.kt`
 
-Callback verso la UI: due metodi, entrambi invocati da `MelostixClient` già sul thread main (via
-`Handler`), mai dal thread di rete.
+Callback towards the UI: two methods, both invoked by `MelostixClient` already on the main thread
+(via `Handler`), never from the network thread.
 
-| Metodo/Callback | Descrizione | Riferimenti |
+| Method/Callback | Description | References |
 |---|---|---|
-| `fun onUpdate(update: LyricsUpdate)` (callback) | Nuovo messaggio di stato dal master (una riga JSON del canale TCP). | implementato da `MainActivity`; invocato da `MelostixClient.parseAndNotify` |
-| `fun onConnectionStateChanged(connected: Boolean)` (callback) | Cambio di stato della connessione TCP (connesso/disconnesso). | implementato da `MainActivity`; invocato da `MelostixClient.notifyConnectionState` |
+| `fun onUpdate(update: LyricsUpdate)` (callback) | New status message from the master (one JSON line from the TCP channel). | implemented by `MainActivity`; invoked by `MelostixClient.parseAndNotify` |
+| `fun onConnectionStateChanged(connected: Boolean)` (callback) | TCP connection state change (connected/disconnected). | implemented by `MainActivity`; invoked by `MelostixClient.notifyConnectionState` |
 
-**Usata da**: `MainActivity` (unico implementatore nel modulo)
+**Used by**: `MainActivity` (the only implementer in the module)
 
 ## `MelostixClient` (`class`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/MelostixClient.kt`
 
-Gestisce l'intero ciclo di vita della connessione al master: discovery UDP → connessione TCP →
-lettura riga per riga dei messaggi JSON → riconnessione automatica se la connessione cade o non
-viene mai trovata (torna in cima al loop e richiama `DiscoveryListener.listenOnce`). Gira su un
-`Thread` dedicato (`isDaemon = true`), nessuna coroutine/AndroidX — skeleton minimale per evitare
-una dipendenza Gradle extra su un client così piccolo. Usa un `Handler(Looper.getMainLooper())`
-per marshalling delle callback verso `MainActivity` sul thread UI. `readFrom` racchiude la lettura
-in `socket.use { }`: minSdk 19 garantisce `Closeable` su `Socket`, quindi non serve il `close()`
-manuale in `finally`.
+Manages the entire connection lifecycle with the master: UDP discovery → TCP connection → reading
+JSON messages line by line → automatic reconnection if the connection drops or is never found
+(loops back to the top and calls `DiscoveryListener.listenOnce` again). Runs on a dedicated
+`Thread` (`isDaemon = true`), no coroutines/AndroidX — a minimal skeleton to avoid an extra Gradle
+dependency on such a small client. Uses a `Handler(Looper.getMainLooper())` to marshal callbacks
+to `MainActivity` on the UI thread. `readFrom` wraps the read in `socket.use { }`: minSdk 19
+guarantees `Closeable` on `Socket`, so no manual `close()` in a `finally` block is needed.
 
-| Metodo/Callback | Descrizione | Riferimenti |
+| Method/Callback | Description | References |
 |---|---|---|
-| `fun start()` | Idempotente (no-op se già `running`); avvia il thread dedicato su `runLoop`. | chiamato da `MainActivity.onStart` |
-| `fun stop()` | Imposta `running = false` e interrompe il thread. | chiamato da `MainActivity.onStop` |
-| `private fun runLoop()` | Loop principale sul thread dedicato: finché `running`, chiama `DiscoveryListener.listenOnce`, e appena trova un host chiama `readFrom(host)`; al ritorno (connessione chiusa) notifica `onConnectionStateChanged(false)` e ricomincia la discovery. | chiama `DiscoveryListener.listenOnce`, `readFrom`, `notifyConnectionState` |
-| `private fun readFrom(host: DiscoveredHost)` | Apre una `Socket` TCP verso l'host scoperto (timeout di connessione), poi dentro `socket.use { }` notifica `onConnectionStateChanged(true)` e legge righe da un `BufferedReader` finché `running` o EOF, passando ogni riga a `parseAndNotify`. | chiamato da `runLoop`; chiama `parseAndNotify`, `notifyConnectionState` |
-| `private fun parseAndNotify(line: String)` | Fa il parsing della riga come `JSONObject`, costruisce un `LyricsUpdate` (righe non valide vengono loggate e scartate), e posta `listener.onUpdate(update)` sul main thread. | chiamato da `readFrom`; invoca `MelostixClientListener.onUpdate` (**callback verso `MainActivity`**) |
-| `private fun notifyConnectionState(connected: Boolean)` | Posta `listener.onConnectionStateChanged(connected)` sul main thread. | chiamato da `runLoop`, `readFrom`; invoca `MelostixClientListener.onConnectionStateChanged` (**callback verso `MainActivity`**) |
-| `private fun JSONObject.optStringOrNull(key: String): String?` | Extension helper: `null` se il campo JSON è esplicitamente `null`, altrimenti `optString`. | chiamato da `parseAndNotify` |
+| `fun start()` | Idempotent (no-op if already `running`); starts the dedicated thread on `runLoop`. | called by `MainActivity.onStart` |
+| `fun stop()` | Sets `running = false` and interrupts the thread. | called by `MainActivity.onStop` |
+| `private fun runLoop()` | Main loop on the dedicated thread: while `running`, calls `DiscoveryListener.listenOnce`, and as soon as it finds a host calls `readFrom(host)`; on return (connection closed) notifies `onConnectionStateChanged(false)` and restarts discovery. | calls `DiscoveryListener.listenOnce`, `readFrom`, `notifyConnectionState` |
+| `private fun readFrom(host: DiscoveredHost)` | Opens a TCP `Socket` to the discovered host (with a connection timeout), then inside `socket.use { }` notifies `onConnectionStateChanged(true)` and reads lines from a `BufferedReader` until `running` is false or EOF, passing each line to `parseAndNotify`. | called by `runLoop`; calls `parseAndNotify`, `notifyConnectionState` |
+| `private fun parseAndNotify(line: String)` | Parses the line as a `JSONObject`, builds a `LyricsUpdate` (invalid lines are logged and dropped), and posts `listener.onUpdate(update)` on the main thread. | called by `readFrom`; invokes `MelostixClientListener.onUpdate` (**callback towards `MainActivity`**) |
+| `private fun notifyConnectionState(connected: Boolean)` | Posts `listener.onConnectionStateChanged(connected)` on the main thread. | called by `runLoop`, `readFrom`; invokes `MelostixClientListener.onConnectionStateChanged` (**callback towards `MainActivity`**) |
+| `private fun JSONObject.optStringOrNull(key: String): String?` | Extension helper: `null` if the JSON field is explicitly `null`, otherwise `optString`. | called by `parseAndNotify` |
 
-**Dipende da**: `DiscoveryListener`, `DiscoveredHost`, `MelostixClientProtocol`, `MelostixClientListener`, `LyricsUpdate`
-**Usata da**: `MainActivity` (costruita con `this` come listener, guidata da `start()`/`stop()`)
+**Depends on**: `DiscoveryListener`, `DiscoveredHost`, `MelostixClientProtocol`, `MelostixClientListener`, `LyricsUpdate`
+**Used by**: `MainActivity` (built with `this` as listener, driven by `start()`/`stop()`)
 
 ## `MelostixClientProtocol` (`object`) — `app-tablet/src/main/java/com/hardrex/melostixclient/tablet/net/MelostixClientProtocol.kt`
 
-Costanti di protocollo (porta discovery UDP, porta dati TCP, nome servizio) — copia mantenuta a mano
-allineata a `com.hardrex.melostix.net.MelostixClientProtocol` lato app-master, non essendoci un
-modulo Gradle condiviso tra i due. Valori correnti: `DISCOVERY_PORT = 8421`, `DATA_PORT = 8420`,
-`SERVICE_NAME = "melostixservice"`. Vedi
-[`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) per la
-definizione autoritativa di questi valori nel contratto condiviso.
+Protocol constants (UDP discovery port, TCP data port, service name) — a hand-maintained copy kept
+in sync with `com.hardrex.melostix.net.MelostixClientProtocol` on the app-master side, since there
+is no shared Gradle module between the two. Current values: `DISCOVERY_PORT = 8421`,
+`DATA_PORT = 8420`, `SERVICE_NAME = "melostixservice"`. See
+[`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) for the
+authoritative definition of these values in the shared contract.
 
-**Usata da**: `DiscoveryListener` (`DISCOVERY_PORT`, `SERVICE_NAME`, `DATA_PORT`), `MelostixClient` (`DISCOVERY_PORT`, in log)
+**Used by**: `DiscoveryListener` (`DISCOVERY_PORT`, `SERVICE_NAME`, `DATA_PORT`), `MelostixClient` (`DISCOVERY_PORT`, in logging)

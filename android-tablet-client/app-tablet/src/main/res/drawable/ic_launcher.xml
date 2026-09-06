@@ -4,59 +4,59 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Icona "piatta" (niente adaptive icon layer: minSdk 15 non lo supporta), stesso disegno
-         di app-master (ic_launcher_foreground.xml su ic_launcher_background) appiattito in un
-         solo drawable: sfondo pieno invece dei due layer separati. Marchio "righe di testo" (8
-         barre orizzontali, quella centrale in ambra = la riga in corso) su tile colorato nel
-         viola di brand di default - allineato al redesign 2026-08-22 di app-master (prima era
-         disco + nota + onde broadcast). -->
+    <!-- "Flat" icon (no adaptive icon layer: minSdk 15 doesn't support it), same design as
+         app-master (ic_launcher_foreground.xml over ic_launcher_background) flattened into a
+         single drawable: solid background instead of the two separate layers. "Lines of text"
+         mark (8 horizontal bars, the middle one in amber = the current line) on a tile colored
+         in the default brand purple - aligned with app-master's 2026-08-22 redesign (previously
+         a disc + note + broadcast waves). -->
     <path
         android:pathData="M0,0 H108 V108 H0 Z"
         android:fillColor="#6750A4"/>
 
-    <!-- Riga 1 -->
+    <!-- Line 1 -->
     <path
         android:pathData="M49.33,32.67 L58.67,32.67"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 2 -->
+    <!-- Line 2 -->
     <path
         android:pathData="M43.14,38.76 L64.86,38.76"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 3: la riga "in corso", ambra fissa, 1.5x piu' spessa -->
+    <!-- Line 3: the "current" line, fixed amber, 1.5x thicker -->
     <path
         android:pathData="M37.27,44.86 L70.73,44.86"
         android:strokeColor="#FFF5A623"
         android:strokeWidth="5.94"
         android:strokeLineCap="round"/>
-    <!-- Riga 4 (la piu' larga) -->
+    <!-- Line 4 (the widest) -->
     <path
         android:pathData="M33.00,50.95 L75.00,50.95"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 5 -->
+    <!-- Line 5 -->
     <path
         android:pathData="M39.40,57.05 L68.60,57.05"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 6 -->
+    <!-- Line 6 -->
     <path
         android:pathData="M44.73,63.14 L63.27,63.14"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 7 -->
+    <!-- Line 7 -->
     <path
         android:pathData="M37.27,69.24 L70.73,69.24"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="3.96"
         android:strokeLineCap="round"/>
-    <!-- Riga 8 -->
+    <!-- Line 8 -->
     <path
         android:pathData="M46.87,75.33 L61.13,75.33"
         android:strokeColor="#FFFFFFFF"

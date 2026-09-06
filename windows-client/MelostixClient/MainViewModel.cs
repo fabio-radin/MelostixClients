@@ -86,7 +86,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         Current = state.Current;
         Next = state.Next;
 
-        // Proprieta' calcolate: non hanno un backing field con Set(), vanno notificate a mano.
+        // Computed properties: they have no backing field with Set(), must be notified by hand.
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HeaderLine)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSyncedLines)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowHeaderLine)));

@@ -151,7 +151,7 @@ public sealed class NetClient
             }
             catch (JsonException)
             {
-                continue; // pacchetto non nostro/malformato, ignorato
+                continue; // not our packet / malformed, ignored
             }
         }
     }
@@ -210,7 +210,7 @@ public sealed class NetClient
                 var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
                 if (line is null)
                 {
-                    break; // il master ha chiuso la connessione
+                    break; // the master closed the connection
                 }
                 if (line.Length > 0)
                 {
@@ -220,7 +220,7 @@ public sealed class NetClient
         }
         catch (OperationCanceledException)
         {
-            // chiusura in corso, si passa comunque per l'aggiornamento "disconnected" sotto
+            // shutdown in progress, still falls through to the "disconnected" update below
         }
         catch (Exception ex) when (ex is SocketException or IOException)
         {
@@ -286,7 +286,7 @@ public sealed class NetClient
         }
         catch (JsonException)
         {
-            // riga malformata: ignorata, si continua con la prossima
+            // malformed line: ignored, moves on to the next one
         }
     }
 

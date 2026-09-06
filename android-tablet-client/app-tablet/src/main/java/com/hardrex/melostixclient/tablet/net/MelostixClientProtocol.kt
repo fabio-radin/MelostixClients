@@ -1,23 +1,22 @@
 package com.hardrex.melostixclient.tablet.net
 
-/** Costanti del protocollo verso l'app-master: devono restare allineate a mano con
- *  com.hardrex.melostix.net.MelostixClientProtocol lato app-master (nessun modulo Gradle
- *  condiviso tra i due, dato il minSdk molto diverso). */
+/** Protocol constants towards the app-master: must stay manually in sync with
+ *  com.hardrex.melostix.net.MelostixClientProtocol on the app-master side (no shared Gradle
+ *  module between the two, given the very different minSdk). */
 object MelostixClientProtocol {
     const val DISCOVERY_PORT = 8421
     const val DATA_PORT = 8420
     const val SERVICE_NAME = "melostixservice"
 
-    /** Versione del contratto master-slave (MelostixProtocol) parlata da questo client. 1.2.0:
-     *  in aggiunta all'handshake di autenticazione opzionale (1.1.0, vedi MelostixClient.readFrom),
-     *  invia ora anche il clientHello opzionale di identificazione (vedi CLIENT_TYPE sotto e
-     *  MelostixClient.sendClientHello) - un master che non lo legge o non lo supporta si comporta
-     *  esattamente come prima, nessun cambiamento. */
+    /** Master-slave contract version (MelostixProtocol) spoken by this client. 1.2.0: in
+     *  addition to the optional authentication handshake (1.1.0, see MelostixClient.readFrom),
+     *  it now also sends the optional identification clientHello (see CLIENT_TYPE below and
+     *  MelostixClient.sendClientHello) - a master that doesn't read it or doesn't support it
+     *  behaves exactly as before, no change. */
     const val PROTOCOL_VERSION = "1.2.0"
 
-    /** `clientType` inviato nel `clientHello` (protocollo 1.2.0): identificatore stabile e
-     *  namespaced di QUESTA implementazione, non del singolo dispositivo - vedi protocol.md,
-     *  "Client identification (optional)", tabella "Registered clientType values" in
-     *  MelostixProtocol. */
+    /** `clientType` sent in the `clientHello` (protocol 1.2.0): a stable, namespaced identifier
+     *  of THIS implementation, not of the individual device - see protocol.md, "Client
+     *  identification (optional)", "Registered clientType values" table in MelostixProtocol. */
     const val CLIENT_TYPE = "melostix.android-tablet"
 }

@@ -1,5 +1,5 @@
-// Melostix - Linux client (SDL2 + SDL_ttf per il testo dei testi, Dear ImGui gia'
-// agganciato per un pannellino di stato/impostazioni - vedi README per come estenderlo).
+// Melostix - Linux client (SDL2 + SDL_ttf for the lyrics text, Dear ImGui already
+// wired in for a small status/settings panel - see README for how to extend it).
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -33,7 +33,7 @@ TTF_Font* openFirstAvailableFont(const std::string& fontOverride, int size) {
     if (!fontOverride.empty()) {
         TTF_Font* font = TTF_OpenFont(fontOverride.c_str(), size);
         if (font) return font;
-        std::fprintf(stderr, "impossibile aprire il font indicato '%s': %s\n", fontOverride.c_str(), TTF_GetError());
+        std::fprintf(stderr, "unable to open the specified font '%s': %s\n", fontOverride.c_str(), TTF_GetError());
     }
     for (const auto& path : kFontCandidates) {
         TTF_Font* font = TTF_OpenFont(path.c_str(), size);
@@ -42,7 +42,7 @@ TTF_Font* openFirstAvailableFont(const std::string& fontOverride, int size) {
     return nullptr;
 }
 
-/** Disegna una riga di testo centrata orizzontalmente su centerX, con l'alto del testo a y. */
+/** Draws a line of text horizontally centered on centerX, with the top of the text at y. */
 void renderCenteredText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text,
                          int centerX, int y, SDL_Color color) {
     if (!font || text.empty()) return;
@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
         } else if (arg == "--font" && i + 1 < argc) {
             fontOverride = argv[++i];
         } else if (arg == "--password" && i + 1 < argc) {
-            // Password condivisa opzionale per l'handshake di autenticazione del master
-            // (protocollo 1.1.0, MelostixProtocol) - omessa se il master non ne richiede una.
+            // Optional shared password for the master's authentication handshake
+            // (protocol 1.1.0, MelostixProtocol) - omitted if the master doesn't require one.
             password = argv[++i];
         }
     }
@@ -115,13 +115,13 @@ int main(int argc, char** argv) {
     std::thread netThread(lyrics::runNetworkClient, std::ref(state), std::ref(stopFlag), fixedHost, fixedPort, password);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::fprintf(stderr, "SDL_Init fallito: %s\n", SDL_GetError());
+        std::fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         stopFlag.store(true);
         netThread.join();
         return 1;
     }
     if (TTF_Init() != 0) {
-        std::fprintf(stderr, "TTF_Init fallito: %s\n", TTF_GetError());
+        std::fprintf(stderr, "TTF_Init failed: %s\n", TTF_GetError());
         stopFlag.store(true);
         netThread.join();
         SDL_Quit();
@@ -136,15 +136,15 @@ int main(int argc, char** argv) {
     SDL_Renderer* renderer = SDL_CreateRenderer(
         window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    // Due dimensioni, come le due righe dim/current del client Python e delle glasses.
+    // Two sizes, like the dim/current lines in the Python client.
     TTF_Font* fontCurrent = openFirstAvailableFont(fontOverride, 36);
     TTF_Font* fontDim = openFirstAvailableFont(fontOverride, 26);
     if (!fontCurrent || !fontDim) {
         std::fprintf(
             stderr,
-            "Nessun font di sistema trovato (provato DejaVu Sans/Liberation/Noto). "
-            "Installa 'fonts-dejavu-core' o passa --font <percorso.ttf>. "
-            "L'app continua comunque (il pannello Dear ImGui funziona senza font TTF).\n");
+            "No system font found (tried DejaVu Sans/Liberation/Noto). "
+            "Install 'fonts-dejavu-core' or pass --font <path.ttf>. "
+            "The app keeps running anyway (the Dear ImGui panel works without a TTF font).\n");
     }
 
     IMGUI_CHECKVERSION();
@@ -172,8 +172,8 @@ int main(int argc, char** argv) {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Pannello di stato minimale - punto di partenza gia' pronto per impostazioni future
-        // (font size, indirizzo del master, ...) senza dover cablare da zero SDL2+ImGui.
+        // Minimal status panel - a starting point already in place for future settings
+        // (font size, master address, ...) without having to wire up SDL2+ImGui from scratch.
         if (showOverlay) {
             ImGui::SetNextWindowPos(ImVec2(12, 12), ImGuiCond_FirstUseEver);
             ImGui::Begin("Status (F1 to hide)", &showOverlay, ImGuiWindowFlags_AlwaysAutoResize);
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
     }
 
     stopFlag.store(true);
-    netThread.join();  // puo' impiegare fino a ~1s (timeout di recv) per accorgersi dello stop
+    netThread.join();  // may take up to ~1s (recv timeout) to notice the stop
 
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();

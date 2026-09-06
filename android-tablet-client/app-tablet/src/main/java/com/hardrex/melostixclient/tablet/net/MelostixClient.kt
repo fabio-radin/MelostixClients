@@ -31,18 +31,18 @@ interface MelostixClientListener {
 }
 
 /**
- * Gestisce l'intero ciclo di vita della connessione al master: scoperta via broadcast UDP,
- * connessione TCP, lettura degli aggiornamenti JSON riga per riga, riconnessione automatica
- * (torna a cercare il master da capo) se la connessione cade o non viene mai trovata. Gira su
- * un thread dedicato: niente coroutine/AndroidX, solo java.net + un Handler per tornare sul
- * thread UI - restare su questo skeleton minimale evita di introdurre una dipendenza Gradle
- * per un client cosi' piccolo.
+ * Manages the entire connection lifecycle with the master: discovery via UDP broadcast, TCP
+ * connection, reading JSON updates line by line, automatic reconnection (goes back to
+ * searching for the master from scratch) if the connection drops or is never found. Runs on a
+ * dedicated thread: no coroutines/AndroidX, just java.net + a Handler to get back on the UI
+ * thread - staying on this minimal skeleton avoids introducing a Gradle dependency for such a
+ * small client.
  *
- * [passwordProvider] e' letto a ogni nuova connessione, non catturato una volta sola: cambiare
- * la password da Impostazioni si applica al prossimo tentativo di connessione senza dover
- * riavviare il client. Vuoto/null = nessuna password configurata (comportamento identico al
- * protocollo 1.0.0: se il master non la richiede la connessione funziona comunque; se la
- * richiede, questo client non potra' autenticarsi - vedi readFrom).
+ * [passwordProvider] is read on every new connection, not captured once: changing the
+ * password from Settings applies to the next connection attempt without restarting the
+ * client. Empty/null = no password configured (identical behavior to protocol 1.0.0: if the
+ * master doesn't require one the connection still works; if it does, this client won't be able
+ * to authenticate - see readFrom).
  */
 class MelostixClient(
     private val listener: MelostixClientListener,
@@ -77,10 +77,10 @@ class MelostixClient(
     }
 
     private fun runLoop() {
-        Log.i(TAG, "avviato, in ascolto broadcast sulla porta ${MelostixClientProtocol.DISCOVERY_PORT}")
+        Log.i(TAG, "started, listening for broadcasts on port ${MelostixClientProtocol.DISCOVERY_PORT}")
         while (running) {
             val host = DiscoveryListener.listenOnce(DISCOVERY_TIMEOUT_MS) ?: continue
-            Log.i(TAG, "master trovato: ${host.address.hostAddress}:${host.port}")
+            Log.i(TAG, "master found: ${host.address.hostAddress}:${host.port}")
             readFrom(host)
             notifyConnectionState(false)
         }
@@ -90,29 +90,29 @@ class MelostixClient(
         val socket = try {
             Socket().apply { connect(InetSocketAddress(host.address, host.port), CONNECT_TIMEOUT_MS) }
         } catch (e: IOException) {
-            Log.w(TAG, "connessione fallita: ${e.message}")
+            Log.w(TAG, "connection failed: ${e.message}")
             return
         }
 
-        // minSdk 19: Socket implementa Closeable da qui in poi, .use{} e' sicuro - vedi il
-        // commento equivalente in DiscoveryListener.kt.
+        // minSdk 19: Socket implements Closeable from here on, .use{} is safe - see the
+        // equivalent comment in DiscoveryListener.kt.
         socket.use {
             try {
                 val reader = BufferedReader(InputStreamReader(it.getInputStream(), Charsets.UTF_8))
                 var line = reader.readLine() ?: return
 
-                // Protocollo 1.1.0 (MelostixProtocol): se il master richiede una password, la
-                // primissima riga e' un authChallenge invece di un normale aggiornamento di
-                // stato - vedi protocol.md, "Authentication (optional)". Un master senza
-                // password configurata manda direttamente un aggiornamento di stato, esattamente
-                // come nel protocollo 1.0.0: questo client resta compatibile con entrambi senza
-                // sapere in anticipo quale incontrera' (authRequired nel pacchetto di discovery
-                // e' solo un segnale informativo precoce, non l'unica fonte di verita').
+                // Protocol 1.1.0 (MelostixProtocol): if the master requires a password, the
+                // very first line is an authChallenge instead of a normal status update - see
+                // protocol.md, "Authentication (optional)". A master with no password
+                // configured sends a status update directly, exactly as in protocol 1.0.0:
+                // this client stays compatible with both without knowing in advance which one
+                // it will meet (authRequired in the discovery packet is only an early
+                // informational signal, not the only source of truth).
                 val challenge = runCatching { JSONObject(line) }.getOrNull()
                 if (challenge?.optString("kind") == "authChallenge") {
                     val password = passwordProvider()
                     if (password.isNullOrEmpty()) {
-                        Log.w(TAG, "il master richiede una password non configurata su questo client")
+                        Log.w(TAG, "the master requires a password that isn't configured on this client")
                         return
                     }
                     val response = JSONObject()
@@ -134,16 +134,17 @@ class MelostixClient(
                     line = reader.readLine() ?: break
                 }
             } catch (e: IOException) {
-                Log.i(TAG, "connessione interrotta: ${e.message}")
+                Log.i(TAG, "connection interrupted: ${e.message}")
             }
         }
     }
 
-    /** Protocollo 1.2.0 (MelostixProtocol): riga opzionale, unica per connessione, che dichiara
-     *  al master la tipologia di questo client - vedi protocol.md, "Client identification
-     *  (optional)". Inviata dopo l'eventuale authResponse (o subito dopo la connessione se non
-     *  serve autenticarsi) e mai prima di leggere la prima riga di stato: il master non la
-     *  aspetta e non risponde, quindi non c'e' bisogno di attendere nulla dopo averla scritta. */
+    /** Protocol 1.2.0 (MelostixProtocol): optional line, sent once per connection, that
+     *  declares this client's type to the master - see protocol.md, "Client identification
+     *  (optional)". Sent after the optional authResponse (or right after connecting if no
+     *  authentication is needed) and never before reading the first status line: the master
+     *  doesn't wait for it and doesn't reply, so there's no need to wait for anything after
+     *  writing it. */
     private fun sendClientHello(socket: Socket) {
         val hello = JSONObject()
             .put("kind", "clientHello")
@@ -169,7 +170,7 @@ class MelostixClient(
         val json = try {
             JSONObject(line)
         } catch (e: Exception) {
-            Log.w(TAG, "messaggio non valido: $line", e)
+            Log.w(TAG, "invalid message: $line", e)
             return
         }
         val update = LyricsUpdate(

@@ -15,5 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "melostix-tablet-client"
 
-// Client "slave" per tablet Android generico (4.4.4 / API 19, 800x480).
+// "Slave" client for a generic Android tablet (4.4.4 / API 19, 800x480).
 include(":app-tablet")

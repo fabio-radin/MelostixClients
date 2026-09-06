@@ -1,68 +1,67 @@
-# Client Python
+# Python Client
 
-Client da terminale per Melostix: trova l'app master sulla LAN (o si connette a un host indicato)
-e mostra le 3 righe di testo (precedente/corrente/successiva) a scorrimento attorno alla
-posizione di riproduzione, nel tuo terminale.
+Terminal client for Melostix: finds the master app on the LAN (or connects to a given host) and
+shows the 3 lines of text (previous/current/next) scrolling around the playback position, in your
+terminal.
 
-Riferimento del protocollo:
-[protocol.md](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) nel repo
-[MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol) (pubblico, contratto v1.2.0 —
-parla l'handshake opzionale di password aggiunto in 1.1.0, e si connette senza problemi a un master
-1.0.0 senza password configurata). Da 1.2.0, invia anche il `clientHello` opzionale di
-identificazione (`clientType = "melostix.python-terminal"`, cablato, più `protocolVersion`) subito
-dopo la connessione (o dopo l'`authResponse`, se la password è in uso) — nessuna configurazione
-utente, un master che non lo legge si comporta esattamente come prima. **Verificato end-to-end il
-2026-08-29** da un PC Windows contro un master **iOS** (iPhone SE 2022) — testi ricevuti e
-visualizzati correttamente, nessuna anomalia. Prima verifica contro un master iOS anziché Android:
-le due implementazioni lato master sono indipendenti, quindi è la prima prova che parlino lo stesso
-protocollo sul filo. Copre solo il funzionamento end-to-end della connessione — non è stato
-osservato se il master legge e registra l'identità dichiarata nel `clientHello`.
+Protocol reference:
+[protocol.md](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) in the
+[MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol) repository (public, contract
+v1.2.0 — speaks the optional password handshake added in 1.1.0, and connects without issues to a
+1.0.0 master with no password configured). Since 1.2.0, it also sends the optional identification
+`clientHello` (`clientType = "melostix.python-terminal"`, hardcoded, plus `protocolVersion`) right
+after connecting (or after the `authResponse`, if a password is in use) — no user configuration, a
+master that doesn't read it behaves exactly as before. **Verified end-to-end on 2026-08-29** from a
+Windows PC against an **iOS** master (iPhone SE 2022) — text received and displayed correctly, no
+anomalies. First verification against an iOS master rather than Android: the two master-side
+implementations are independent, so this is the first proof they speak the same protocol on the
+wire. This only covers the connection working end-to-end — it was not observed whether the master
+reads and records the identity declared in the `clientHello`.
 
-## Requisiti
+## Requirements
 
 - Python 3.8+
-- **Linux/macOS**: nulla in più — il modulo `curses` è incluso nel Python di sistema. Se sei su
-  una distro minimale e per qualche motivo manca, installa `python3` dal tuo package manager (è
-  incluso) — es. su Debian/Ubuntu: `sudo apt-get install python3`.
-- **Windows**: `curses` non è incluso, installa prima il sostituto drop-in:
+- **Linux/macOS**: nothing extra — the `curses` module is included in the system Python. If
+  you're on a minimal distro and it's somehow missing, install `python3` from your package
+  manager (it's included) — e.g. on Debian/Ubuntu: `sudo apt-get install python3`.
+- **Windows**: `curses` is not included, install the drop-in replacement first:
   ```
   pip install -r requirements.txt
   ```
-  (installa solo `windows-curses`, un no-op su Linux/macOS grazie all'environment marker nel
+  (only installs `windows-curses`, a no-op on Linux/macOS thanks to the environment marker in
   requirements.txt).
 
-## Esecuzione
+## Running
 
 ```
 python melostix_client.py
 ```
 
-Attende il discovery broadcast UDP del master (porta 8421) e si connette automaticamente. Premi
-`q` per uscire.
+Waits for the master's UDP discovery broadcast (port 8421) and connects automatically. Press `q`
+to quit.
 
-Per saltare il discovery e connettersi direttamente (es. subnet diversa, VPN):
+To skip discovery and connect directly (e.g. a different subnet, VPN):
 
 ```
 python melostix_client.py --host <master-ip> --port 8420
 ```
 
-Se il master ha una password condivisa configurata (Impostazioni, protocollo 1.1.0), passala con
-`--password`; ometti il flag se il master non ne ha nessuna configurata (il default):
+If the master has a shared password configured (Settings, protocol 1.1.0), pass it with
+`--password`; omit the flag if the master has none configured (the default):
 
 ```
 python melostix_client.py --password correct-horse-battery-staple
 ```
 
-## Stato attuale
+## Current status
 
-✅ Verificato su hardware reale (discovery + connessione + handshake password 1.1.0 contro un
-master con password impostata). Il primo test (2026-08-21) aveva trovato un bug — il client
-perdeva la connessione per timeout anche con una connessione perfettamente sana, quando il master
-restava un po' troppo a lungo (>5s) senza inviare un aggiornamento di stato (es. una riga di testo
-lunga, o un brano in pausa): `socket.create_connection(..., timeout=5)` lascia quel timeout
-impostato sul socket anche **dopo** la connessione, non solo durante l'handshake TCP, quindi ogni
-lettura successiva (incluso il normale `for line in f` bloccante) falliva con `socket.timeout` non
-appena il master stava fermo più di 5 secondi, e veniva trattata come una disconnessione reale
-invece che come una semplice attesa. Corretto in `network_loop()` (`melostix_client.py`)
-resettando il timeout a `None` subito dopo la connessione, poi **ri-testato su hardware reale il
-2026-08-21: nessun timeout più comparso**, connessione stabile.
+✅ Verified on real hardware (discovery + connection + 1.1.0 password handshake against a master
+with a password set). The first test (2026-08-21) found a bug — the client dropped the connection
+on a timeout even with a perfectly healthy connection, whenever the master stayed a bit too long
+(>5s) without sending a status update (e.g. a long line of text, or a paused track):
+`socket.create_connection(..., timeout=5)` leaves that timeout set on the socket even **after** the
+connection, not just during the TCP handshake, so every subsequent read (including the normal
+blocking `for line in f`) failed with `socket.timeout` as soon as the master was idle for more than
+5 seconds, and was treated as a real disconnection instead of just a wait. Fixed in
+`network_loop()` (`melostix_client.py`) by resetting the timeout to `None` right after connecting,
+then **re-tested on real hardware on 2026-08-21: no more timeouts**, stable connection.

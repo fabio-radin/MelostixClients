@@ -1,59 +1,57 @@
 # android-tablet-client
 
-Client "slave" Android per un tablet generico Android 4.4.4 / API 19 (kernel 3.8.13, display 
-800x480): riceve dal master le 3 righe di testo (precedente/corrente/successiva) attorno alla 
-posizione di riproduzione via rete locale, e le mostra fullscreen, sfondo nero.
+Android "slave" client for a generic Android 4.4.4 / API 19 tablet (kernel 3.8.13, 800x480
+display): receives the 3 lines of text (previous/current/next) around the playback position from
+the master over the local network, and displays them fullscreen on a black background.
 
-Modulo Gradle standalone (`:app-tablet`), non dipende da nessun altro modulo di questo repo.
+Standalone Gradle module (`:app-tablet`), does not depend on any other module in this repo.
 
-## Stato attuale
+## Current status
 
-**Verificato funzionante end-to-end su hardware reale il 2026-08-21** (tablet + telefono sulla 
-stessa rete WiFi, incluso l'handshake password 1.1.0 contro un master con password impostata).
+**Verified working end-to-end on real hardware on 2026-08-21** (tablet + phone on the same WiFi
+network, including the 1.1.0 password handshake against a master with a password set).
 
-- Fullscreen "sticky immersive" (`SYSTEM_UI_FLAG_IMMERSIVE_STICKY`), garantito qui dato che 
-  coincide esattamente col minSdk di questo modulo.
-- `net/` usa `.use { }` di Kotlin sui socket: minSdk 19 è il primo livello API in cui 
-  `Socket`/`DatagramSocket` implementano davvero `Closeable`, quindi qui è sicuro anche a 
-  runtime, non solo a compile-time.
-- Dimensioni testo verificate sul display 800x480 reale nel test del 2026-08-21 
-  (`MainActivity.kt`).
+- "Sticky immersive" fullscreen (`SYSTEM_UI_FLAG_IMMERSIVE_STICKY`), guaranteed here since it
+  coincides exactly with this module's minSdk.
+- `net/` uses Kotlin's `.use { }` on sockets: minSdk 19 is the first API level where
+  `Socket`/`DatagramSocket` actually implement `Closeable`, so this is safe at runtime here, not
+  just at compile time.
+- Text sizes verified on the real 800x480 display in the 2026-08-21 test (`MainActivity.kt`).
 
-## Perché niente AndroidX/Compose
+## Why no AndroidX/Compose
 
-Compose/AndroidX moderne richiedono minSdk 21, questo modulo è fermo ad API 19 
-(Android 4.4.4 KitKat esatto).
+Modern Compose/AndroidX require minSdk 21; this module is pinned to API 19 (exactly Android 4.4.4
+KitKat).
 
-## Protocollo master → slave
+## Master → slave protocol
 
-Nessun HTTP/TLS, socket TCP grezzo, un JSON per riga, push
-unidirezionale master → slave, scoperta automatica via broadcast UDP. Vedi il protocollo
-formale nel repo pubblico [MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol)
-(estratto da `MelostixContracts` il 2026-08-21) - contratto **v1.2.0**: se il master richiede una
-password condivisa (opzionale, Impostazioni → Server sul master), questo client la manda tramite
-l'handshake HMAC-SHA256 descritto li' (`net/MelostixClient.kt`, `net/ClientSettings.kt`);
-vuota/non impostata (default) = comportamento identico al protocollo 1.0.0. Password impostabile
-dal pannello impostazioni (icona "⋮" in basso a destra) - verificata su device reale il
-2026-08-21, come il resto di questo client.
+No HTTP/TLS, raw TCP socket, one JSON object per line, unidirectional push from master to slave,
+automatic discovery via UDP broadcast. See the formal protocol in the public
+[MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol) repository
+([`protocol.md`](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md)) — contract
+**v1.2.0**: if the master requires a shared password (optional, Settings → Server on the master),
+this client sends it via the HMAC-SHA256 handshake described there (`net/MelostixClient.kt`,
+`net/ClientSettings.kt`); empty/unset (default) = identical behavior to protocol 1.0.0. The
+password can be set from the settings panel ("⋮" icon in the bottom right) — verified on real
+hardware on 2026-08-21, like the rest of this client.
 
-Da 1.2.0 (2026-08-24), subito dopo la connessione (o subito dopo l'`authResponse` se la password
-è in uso), il client invia anche il `clientHello` opzionale che dichiara la propria tipologia al
-master: `clientType = "melostix.android-tablet"` (cablato, vedi `MelostixClientProtocol.kt`),
-più `clientVersion` (dal `versionName` di Gradle, che ha richiesto abilitare
-`buildFeatures.buildConfig` in `build.gradle.kts` - spento di default da AGP 8+) e
-`protocolVersion`. Nessuna configurazione utente: un master che non legge questa riga si comporta
-esattamente come prima. **Verificato end-to-end il 2026-08-29** su un tablet Android 4.4.4 contro
-un master **iOS** (iPhone SE 2022) — testi ricevuti e visualizzati correttamente, nessuna anomalia.
-Prima verifica contro un master iOS anziché Android: le due implementazioni lato master sono
-indipendenti, quindi è la prima prova che parlino lo stesso protocollo sul filo. Copre solo il
-funzionamento end-to-end della connessione — non è stato osservato se il master legge e registra
-l'identità dichiarata nel `clientHello`.
+Since 1.2.0 (2026-08-24), right after connecting (or right after the `authResponse`, if a password
+is in use), the client also sends the optional `clientHello` declaring its own type to the master:
+`clientType = "melostix.android-tablet"` (hardcoded, see `MelostixClientProtocol.kt`), plus
+`clientVersion` (from Gradle's `versionName`, which required enabling `buildFeatures.buildConfig`
+in `build.gradle.kts` — off by default from AGP 8+) and `protocolVersion`. No user configuration: a
+master that doesn't read this line behaves exactly as before. **Verified end-to-end on
+2026-08-29** on an Android 4.4.4 tablet against an **iOS** master (iPhone SE 2022) — text received
+and displayed correctly, no anomalies. First verification against an iOS master rather than
+Android: the two master-side implementations are independent, so this is the first proof they
+speak the same protocol on the wire. This only covers the connection working end-to-end — it was
+not observed whether the master reads and records the identity declared in the `clientHello`.
 
-## Come buildare
+## How to build
 
 ```bash
 ./gradlew :app-tablet:assembleDebug
 ```
 
-Stessa toolchain di MelostixMaster: Gradle 8.9 + AGP 8.7.1, JDK pinnato in `gradle.properties`
-(`org.gradle.java.home`) - aggiorna quel percorso se il tuo JDK 21 è altrove.
+Toolchain: Gradle 8.9 + AGP 8.7.1, JDK pinned in `gradle.properties` (`org.gradle.java.home`) —
+update that path if your JDK 21 lives elsewhere.

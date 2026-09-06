@@ -1,8 +1,8 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -Ithird_party/imgui -Ithird_party/imgui/backends
-# libcrypto (OpenSSL): solo per HMAC-SHA256 nell'handshake di autenticazione opzionale del
-# protocollo 1.1.0 (MelostixProtocol) - vedi net_client.cpp. Il resto del client (parsing JSON,
-# base64) resta scritto a mano, nessuna nuova dipendenza per quello.
+# libcrypto (OpenSSL): only for HMAC-SHA256 in the optional authentication handshake of
+# protocol 1.1.0 (MelostixProtocol) - see net_client.cpp. The rest of the client (JSON parsing,
+# base64) stays hand-written, no new dependency for that.
 LDFLAGS := $(shell pkg-config --libs sdl2 SDL2_ttf 2>/dev/null || echo -lSDL2 -lSDL2_ttf) -lpthread $(shell pkg-config --libs libcrypto 2>/dev/null || echo -lcrypto)
 
 IMGUI_SRC := \

@@ -1,65 +1,64 @@
-# Client Linux
+# Linux Client
 
-Client SDL2/SDL_ttf per Melostix: finestra fullscreen-friendly con le 3 righe di testo
-(precedente/corrente/successiva) a scorrimento attorno alla posizione di riproduzione. Dear ImGui
-è già cablato nel render loop (un piccolo overlay di stato, `F1` per attivarlo/disattivarlo) così
-aggiungere impostazioni/controlli reali in futuro non richiede di collegare SDL2+ImGui da zero.
+SDL2/SDL_ttf client for Melostix: a fullscreen-friendly window with the 3 lines of text
+(previous/current/next) scrolling around the playback position. Dear ImGui is already wired into
+the render loop (a small status overlay, `F1` to toggle it) so adding real settings/controls in the
+future doesn't require wiring up SDL2+ImGui from scratch.
 
-Riferimento del protocollo:
-[protocol.md](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) nel repo
-[MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol) (pubblico, contratto v1.2.0 —
-parla l'handshake opzionale di password aggiunto in 1.1.0, e si connette senza problemi a un master
-1.0.0 senza password configurata). Da 1.2.0, invia anche il `clientHello` opzionale di
-identificazione (`clientType = "melostix.linux-imgui"`, cablato, più `protocolVersion`) subito
-dopo la connessione (o dopo l'`authResponse`, se la password è in uso) — nessuna configurazione
-utente, un master che non lo legge si comporta esattamente come prima.
+Protocol reference:
+[protocol.md](https://github.com/fabio-radin/MelostixProtocol/blob/main/protocol.md) in the
+[MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol) repository (public, contract
+v1.2.0 — speaks the optional password handshake added in 1.1.0, and connects without issues to a
+1.0.0 master with no password configured). Since 1.2.0, it also sends the optional identification
+`clientHello` (`clientType = "melostix.linux-imgui"`, hardcoded, plus `protocolVersion`) right
+after connecting (or after the `authResponse`, if a password is in use) — no user configuration, a
+master that doesn't read it behaves exactly as before.
 
-> **Verificato funzionante end-to-end su hardware reale**, incluso l'handshake password 1.1.0
-> contro un master con password impostata. Il `clientHello` 1.2.0 **non è ancora stato
-> verificato** (nessun toolchain g++/Linux disponibile in questa sessione, solo revisione statica
-> del codice).
+> **Verified working end-to-end on real hardware**, including the 1.1.0 password handshake
+> against a master with a password set. The 1.2.0 `clientHello` **has not been verified yet**
+> (no g++/Linux toolchain available in this session, only a static code review).
 
-## Dipendenze (Debian/Ubuntu)
+## Dependencies (Debian/Ubuntu)
 
 ```
 sudo apt-get install build-essential libsdl2-dev libsdl2-ttf-dev libssl-dev fonts-dejavu-core
 ```
 
-- `build-essential` — g++ e make
+- `build-essential` — g++ and make
 - `libsdl2-dev` / `libsdl2-ttf-dev` — rendering
-- `libssl-dev` — libcrypto, solo per HMAC-SHA256 nell'handshake opzionale di password (protocollo
-  1.1.0); nient'altro in questo client usa OpenSSL
-- `fonts-dejavu-core` — necessario solo se il tuo sistema non ha già DejaVu/Liberation/Noto
-  installati (l'app cerca un font di sistema all'avvio e ripiega su una breve lista; usa
-  `--font /path/to/font.ttf` per puntarne uno specifico)
+- `libssl-dev` — libcrypto, only for HMAC-SHA256 in the optional password handshake (protocol
+  1.1.0); nothing else in this client uses OpenSSL
+- `fonts-dejavu-core` — only needed if your system doesn't already have DejaVu/Liberation/Noto
+  installed (the app looks for a system font at startup and falls back to a short list; use
+  `--font /path/to/font.ttf` to point at a specific one)
 
-Dear ImGui stesso è incluso come git submodule, nessun pacchetto separato necessario — assicurati
-solo che sia stato scaricato:
+Dear ImGui itself is included as a git submodule, no separate package needed — just make sure it
+has been fetched:
 
 ```
 git submodule update --init --recursive
 ```
 
-(già fatto automaticamente se hai clonato questo repo con `git clone --recurse-submodules`)
+(already done automatically if you cloned this repo with `git clone --recurse-submodules`)
 
-## Build ed esecuzione
+## Build and run
 
 ```
 make
 ./melostix-client
 ```
 
-Attende il discovery broadcast UDP del master e si connette automaticamente. `Esc` per uscire,
-`F1` per attivare/disattivare l'overlay di stato.
+Waits for the master's UDP discovery broadcast and connects automatically. `Esc` to quit, `F1` to
+toggle the status overlay.
 
-Per saltare il discovery e connettersi direttamente:
+To skip discovery and connect directly:
 
 ```
 ./melostix-client --host <master-ip> --port 8420
 ```
 
-Se il master ha una password condivisa configurata (Impostazioni, protocollo 1.1.0), passala con
-`--password`; ometti il flag se il master non ne ha nessuna configurata (il default):
+If the master has a shared password configured (Settings, protocol 1.1.0), pass it with
+`--password`; omit the flag if the master has none configured (the default):
 
 ```
 ./melostix-client --password correct-horse-battery-staple

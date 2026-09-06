@@ -5,23 +5,22 @@
 #include <string>
 #include <thread>
 
-// Client di rete per il protocollo Melostix (vedi protocol.md nel repo pubblico
-// MelostixProtocol, https://github.com/fabio-radin/MelostixProtocol - estratto da
-// MelostixContracts/protocols/master-slave il 2026-08-21): discovery via broadcast UDP sulla
-// porta 8421, poi lettura di righe JSON dal canale dati TCP sulla porta indicata. Gira in un
-// thread separato da quello di rendering; lo stato condiviso e' protetto da un mutex, letto dal
-// loop di rendering a ogni frame.
+// Network client for the Melostix protocol (see protocol.md in the public repository
+// MelostixProtocol, https://github.com/fabio-radin/MelostixProtocol): UDP broadcast discovery on
+// port 8421, then reading JSON lines from the TCP data channel on the announced port. Runs on a
+// thread separate from rendering; the shared state is protected by a mutex, read by the render
+// loop every frame.
 
 namespace lyrics {
 
 constexpr int kDiscoveryPort = 8421;
 constexpr const char* kServiceName = "melostixservice";
 
-/** Snapshot immutabile dello stato corrente, per il thread di rendering: una copia per frame,
- *  cosi' non serve tenere il mutex mentre si disegna. */
+/** Immutable snapshot of the current state, for the rendering thread: one copy per frame, so
+ *  the mutex doesn't need to be held while drawing. */
 struct StateSnapshot {
     bool connected = false;
-    std::string info;      // messaggio di stato quando non connesso (o appena connesso)
+    std::string info;      // status message when not connected (or just connected)
     std::string status = "none";
     std::string title;
     std::string artist;
@@ -30,7 +29,7 @@ struct StateSnapshot {
     std::string next;
 };
 
-/** Stato condiviso fra il thread di rete (scrittore) e il loop di rendering (lettore). */
+/** State shared between the network thread (writer) and the render loop (reader). */
 class SharedState {
 public:
     void setInfo(const std::string& info);
@@ -43,15 +42,15 @@ private:
     StateSnapshot data_;
 };
 
-/** Avvia (bloccante, va chiamata in un thread dedicato) il loop discovery -> connessione ->
- *  lettura, con riconnessione automatica finche' stopFlag non diventa true. Se fixedHost non e'
- *  vuoto, salta del tutto la discovery UDP e si connette sempre li'. Se password non e' vuota,
- *  risponde all'handshake di autenticazione opzionale del protocollo 1.1.0 (MelostixProtocol) se
- *  il master lo richiede - vuota (default) = nessuna password configurata su questo client,
- *  comportamento identico al protocollo 1.0.0 con un master che non la richiede. Invia anche,
- *  subito dopo l'eventuale handshake, il clientHello opzionale del protocollo 1.2.0 che dichiara
- *  la propria tipologia al master (vedi kClientType in net_client.cpp) - un master che non lo
- *  legge si comporta esattamente come prima. */
+/** Starts (blocking, must be called on a dedicated thread) the discovery -> connect -> read
+ *  loop, with automatic reconnection until stopFlag becomes true. If fixedHost is not empty,
+ *  skips UDP discovery entirely and always connects there. If password is not empty, responds
+ *  to the optional authentication handshake of protocol 1.1.0 (MelostixProtocol) if the master
+ *  requires it - empty (default) = no password configured on this client, identical behavior to
+ *  protocol 1.0.0 with a master that doesn't require one. Also sends, right after the optional
+ *  handshake, the optional clientHello of protocol 1.2.0 that declares its own type to the
+ *  master (see kClientType in net_client.cpp) - a master that doesn't read it behaves exactly as
+ *  before. */
 void runNetworkClient(
     SharedState& state,
     std::atomic<bool>& stopFlag,

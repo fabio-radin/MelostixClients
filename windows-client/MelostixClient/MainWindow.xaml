@@ -15,7 +15,7 @@
     </Window.Resources>
     <Grid>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="800">
-            <!-- Finestra a 3 righe (precedente/corrente/successiva) - solo quando status == "synced". -->
+            <!-- 3-line display (previous/current/next) - only when status == "synced". -->
             <TextBlock Text="{Binding Previous}"
                        Foreground="#9E9E9E" FontSize="22"
                        HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
@@ -31,7 +31,7 @@
                        HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
                        Visibility="{Binding ShowSyncedLines, Converter={StaticResource BoolToVis}}" />
 
-            <!-- Riga singola per tutti gli altri stati (none/loading/plain/not_found/error/non connesso). -->
+            <!-- Single line for every other state (none/loading/plain/not_found/error/not connected). -->
             <TextBlock Text="{Binding HeaderLine}"
                        Foreground="White" FontSize="26"
                        HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"

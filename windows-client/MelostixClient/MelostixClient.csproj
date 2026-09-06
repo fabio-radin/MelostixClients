@@ -15,9 +15,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- ApplicationIcon (sopra) copre solo l'icona del file .exe: la Window.Icon in XAML la
-         risolve a runtime come risorsa impacchettata nell'assembly, va inclusa esplicitamente
-         qui altrimenti "Icon="app.ico"" in MainWindow.xaml lancia IOException all'avvio. -->
+    <!-- ApplicationIcon (above) only covers the .exe file's icon: the Window.Icon in XAML
+         resolves it at runtime as a resource packed into the assembly, it must be included
+         explicitly here or "Icon="app.ico"" in MainWindow.xaml throws IOException at startup. -->
     <Resource Include="app.ico" />
   </ItemGroup>
 

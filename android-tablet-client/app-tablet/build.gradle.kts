@@ -9,9 +9,9 @@ android {
 
     defaultConfig {
         applicationId = "com.hardrex.melostixclient.tablet"
-        // Target reale: tablet generico Android 4.4.4 (kernel 3.8.13), display 800x480,
-        // landscape. Android 4.4.4 = API 19 esatto (KitKat): niente AndroidX/Compose qui
-        // (Compose richiede minSdk 21).
+        // Real target: a generic Android 4.4.4 tablet (kernel 3.8.13), 800x480 display,
+        // landscape. Android 4.4.4 = exactly API 19 (KitKat): no AndroidX/Compose here
+        // (Compose requires minSdk 21).
         minSdk = 19
         targetSdk = 19
         versionCode = 1
@@ -19,9 +19,9 @@ android {
     }
 
     buildFeatures {
-        // Serve solo per esporre BuildConfig.VERSION_NAME al client di rete (protocollo 1.2.0,
-        // campo opzionale clientVersion del clientHello - vedi net/MelostixClient.kt): AGP 8+
-        // non lo genera piu' di default.
+        // Only needed to expose BuildConfig.VERSION_NAME to the network client (protocol
+        // 1.2.0, optional clientVersion field of the clientHello - see
+        // net/MelostixClient.kt): AGP 8+ no longer generates it by default.
         buildConfig = true
     }
 
@@ -45,10 +45,10 @@ android {
     }
 
     lint {
-        // minSdk 19 con toolchain moderna genera avvisi "NewApi" attesi: ogni chiamata va
-        // comunque verificata a mano contro il livello API 19.
+        // minSdk 19 with a modern toolchain generates expected "NewApi" warnings: every call
+        // still needs to be checked by hand against API level 19.
         abortOnError = false
     }
 }
 
-// Nessuna dipendenza oltre ai plugin: hardware generico, nessun SDK proprietario da collegare.
+// No dependency beyond the plugins: generic hardware, no proprietary SDK to wire up.

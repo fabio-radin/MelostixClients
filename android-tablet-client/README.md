@@ -47,6 +47,14 @@ Android: the two master-side implementations are independent, so this is the fir
 speak the same protocol on the wire. This only covers the connection working end-to-end — it was
 not observed whether the master reads and records the identity declared in the `clientHello`.
 
+## Android's local network restriction
+
+This module declares `targetSdk = 19`, which is in the legacy row of that restriction: local
+network access stays implicit through `INTERNET`, and the new `ACCESS_LOCAL_NETWORK` permission
+must not be added. The full survey — the traffic, the permissions, and what the Android
+documentation says would happen otherwise — is in
+[`../docs/local-network-restriction.md`](../docs/local-network-restriction.md) (2026-09-19).
+
 ## How to build
 
 ```bash

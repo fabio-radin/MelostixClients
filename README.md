@@ -25,6 +25,11 @@ The full wire format (ports, JSON shape, optional password handshake, client ide
 documented in the public [MelostixProtocol](https://github.com/fabio-radin/MelostixProtocol)
 repository (`protocol.md`); each client's own README links the specific sections it implements.
 
+Android's local network restriction (opt-in on Android 16, enforced from Android 17) governs
+exactly this kind of traffic. Where the Android client of this repository stands with respect
+to it, as of 2026-09-19, is recorded in
+[`docs/local-network-restriction.md`](docs/local-network-restriction.md).
+
 ## Building and running each client
 
 ### android-tablet-client
